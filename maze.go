@@ -5,6 +5,10 @@ import (
 	"math/rand"
 )
 
+// REFERENCES
+// https://www.baeldung.com/cs/maze-generation#:~:text=Another%20way%20of%20generating%20a,as%20visited%2C%20and%20so%20on.
+// https://medium.com/swlh/fun-with-python-1-maze-generator-931639b4fb7e
+
 func main() {
 	width := 21
 	height := 21
@@ -38,22 +42,10 @@ func generateStart(height, width int) []int {
 }
 
 func generateMaze(gameMap [][]string, height, width int) [][]string {
-
+	//
 	startingPosition := generateStart(height, width)
-	for {
-		flag := false
+	for startingPosition[0]%2 == 0 || startingPosition[1]%2 == 0 {
 		startingPosition = generateStart(height, width)
-		for _, i := range startingPosition {
-			if i%2 != 0 {
-				flag = true
-			} else {
-				flag = false
-				break
-			}
-		}
-		if flag == true {
-			break
-		}
 	}
 	fmt.Println(startingPosition)
 	gameMap[startingPosition[0]][startingPosition[1]] = "X"
