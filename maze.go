@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -12,8 +13,8 @@ import (
 // https://medium.com/swlh/fun-with-python-1-maze-generator-931639b4fb7e
 
 func main() {
-	width := 11
-	height := 11
+	width := 31
+	height := 31
 	// This program was designed to have and odd width and height
 	for i := 0; i < 1; i++ {
 		initializeMap := initialize(width, height)
@@ -66,44 +67,90 @@ func generateMaze(gameMap [][]string, height, width int) [][]string {
 func randomAlgo(gameMap [][]string, startingPosition []int, height, width int) [][]string {
 	//Move and remove the wall between each other
 	//Randomize whether to go vertical or horizontal
-	if rand.Intn(2) == 1 {
-		//Vertical
-		fmt.Println("VERTICAL")
-		if rand.Intn(2) == 1 {
-			//Going Up
-			//If it does not go over the maze
-			if startingPosition[0]-2 > 0 {
-				fmt.Println("UP")
-				gameMap[startingPosition[0]-1][startingPosition[1]] = " "
-			}
-		} else {
-			//Going Down
-			if startingPosition[0]+2 < height {
-				fmt.Println("DOWN")
-				gameMap[startingPosition[0]+1][startingPosition[1]] = " "
+	//Empty cells is " ", so find number of " " and we can know the amount of empty cells and then while there is still empty cells
+	//we continue the movement?
+	//Need to improve movement so that if it rolls a direction but can't meet its inner condition, then redo another random direction again
+	//Add condition to see if the direction being move has been visited b4.
+	//A unvisited cell would be a cell with all the walls intact?
+	emptyCells := make([][]int, 0)
+	for heightIndex := 0; heightIndex < height; heightIndex++ {
+		for widthIndex := 0; widthIndex < width; widthIndex++ {
+			if gameMap[heightIndex][widthIndex] == " " {
+				position := []int{heightIndex, widthIndex}
+				emptyCells = append(emptyCells, position)
 			}
 		}
-	} else {
-		//Horizontal
-		//If it does not go over the maze
-		fmt.Println("HORIZONTAL")
+	}
+
+	visitedCells := make([][]int, 0)
+	currentPosition := make([]int, 2)
+
+	currentPosition[0], currentPosition[1] = startingPosition[0], startingPosition[1]
+	// for len(emptyCells) > 0 {
+	//REMEMBER TO CHANGE THIS FOR LOOP CONDITION
+	for i := 0; i < 100; i++ {
+		//TIME LAG FOR VISUAL PURPOSES
+		time.Sleep(500 * time.Millisecond)
+		gameMap[currentPosition[0]][currentPosition[1]] = " "
 		if rand.Intn(2) == 1 {
-			if startingPosition[1]+2 < width {
-				fmt.Println("RIGHT")
-				gameMap[startingPosition[0]][startingPosition[1]+1] = " "
+			//Vertical
+			fmt.Println("VERTICAL")
+			if rand.Intn(2) == 1 {
+				//Going Up
+				//If it does not go over the maze
+				if currentPosition[0]-2 > 0 {
+					fmt.Println("UP")
+					//Remove the wall between
+					gameMap[currentPosition[0]-1][currentPosition[1]] = " "
+					//Variable to add into visitedCells later
+					currentPosition[0] = currentPosition[0] - 2
+				}
+			} else {
+				//Going Down
+				if currentPosition[0]+2 < height {
+					fmt.Println("DOWN")
+					//Remove the wall between
+					gameMap[currentPosition[0]+1][currentPosition[1]] = " "
+					//Variable to add into visitedCells later
+					currentPosition[0] = currentPosition[0] + 2
+				}
 			}
 		} else {
-			if startingPosition[1]-2 > 0 {
-				fmt.Println("LEFT")
-				gameMap[startingPosition[0]][startingPosition[1]-1] = " "
+			//Horizontal
+			//If it does not go over the maze
+			fmt.Println("HORIZONTAL")
+
+			if rand.Intn(2) == 1 {
+				if currentPosition[1]+2 < width {
+					fmt.Println("RIGHT")
+					//Remove the wall between
+					gameMap[currentPosition[0]][currentPosition[1]+1] = " "
+					//Variable to add into visitedCells later
+					currentPosition[1] = currentPosition[1] + 2
+				}
+			} else {
+				if currentPosition[1]-2 > 0 {
+					fmt.Println("LEFT")
+					//Remove the wall between
+					gameMap[currentPosition[0]][currentPosition[1]-1] = " "
+					//Variable to add into visitedCells later
+					currentPosition[1] = currentPosition[1] - 2
+				}
 			}
 		}
 
+		gameMap[currentPosition[0]][currentPosition[1]] = "X"
+		visualizeMaze(gameMap)
+		visitedCells = append(visitedCells, currentPosition)
 	}
+
 	return gameMap
 }
 
 func visualizeMaze(maze [][]string) {
+	fmt.Println("----------------------")
+	//Clear terminal
+	fmt.Print("\033[H\033[2J")
 	for i := range maze {
 		fmt.Println(maze[i])
 	}
