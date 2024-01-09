@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/mattn/go-tty"
 )
 
 // REFERENCES
@@ -16,76 +19,62 @@ import (
 // Maybe add save maze function in the future?
 
 // Global var
-var direction string = ""
 var numSteps int = 0
-var width int = 31
-var height int = 31
 
-func main() {
-	// This program was designed to have and odd width and height
-	fmt.Println("Enter your desired width |odd numbers only :( |")
-	fmt.Scanln(&width)
-	fmt.Println("Enter your desired health |odd numbers only as well : ( |")
-	fmt.Scanln(&height)
-	if width%2 == 0 {
-		width++
-	}
-	if height%2 == 0 {
-		height++
-	}
-	initializeMap := initialize(width, height)
-	generateMaze(initializeMap, width, height)
-	// visualizeMaze(generatedMaze, width)
+// var width int = 31
+// var height int = 31
+
+type Maze struct {
+	width            int
+	height           int
+	numSteps         int
+	startingPosition []int
+	currentPosition  []int
+	gameMap          [][]string
 }
 
-func initialize(height, width int) [][]string {
+func (maze *Maze) initialize() [][]string {
 	//Creating the matrix
-	gameMap := make([][]string, height)
-	for heightIndex := 0; heightIndex < height; heightIndex++ {
-		gameMap[heightIndex] = make([]string, width)
-		for widthIndex := 0; widthIndex < width; widthIndex++ {
+	maze.gameMap = make([][]string, maze.height)
+	for heightIndex := 0; heightIndex < maze.height; heightIndex++ {
+		maze.gameMap[heightIndex] = make([]string, maze.width)
+		for widthIndex := 0; widthIndex < maze.width; widthIndex++ {
 			//Generate outer walls and cells
-			if heightIndex == 0 || heightIndex == height-1 || widthIndex == 0 || widthIndex == width-1 || heightIndex%2 == 0 || widthIndex%2 == 0 {
-				gameMap[heightIndex][widthIndex] = color.HiBlueString("*")
+			if heightIndex == 0 || heightIndex == maze.height-1 || widthIndex == 0 || widthIndex == maze.width-1 || heightIndex%2 == 0 || widthIndex%2 == 0 {
+				maze.gameMap[heightIndex][widthIndex] = color.HiBlueString("*")
 			} else {
-				gameMap[heightIndex][widthIndex] = " "
+				maze.gameMap[heightIndex][widthIndex] = " "
 			}
 		}
 	}
 
-	return gameMap
+	return maze.gameMap
 }
 
-func generateStart(height, width int) []int {
-	startingPosition := []int{rand.Intn(height-1-1) + 1, rand.Intn(width-2) + 1}
-	return startingPosition
-}
-
-func generateMaze(gameMap [][]string, height, width int) [][]string {
+func (maze *Maze) generateMaze() [][]string {
 	//Generates a random odd X,Y starting position but instead of constantly randomly generating a random position each time,
 	//I could just minus 1 from the position that is not odd.
-	startingPosition := generateStart(height, width)
-	if startingPosition[0]%2 == 0 {
-		startingPosition[0]++
+	maze.generateStart()
+	if maze.startingPosition[0]%2 == 0 {
+		maze.startingPosition[0]++
 	}
-	if startingPosition[1]%2 == 0 {
-		startingPosition[1]++
+	if maze.startingPosition[1]%2 == 0 {
+		maze.startingPosition[1]++
 	}
 
-	gameMap[startingPosition[0]][startingPosition[1]] = "X"
+	fmt.Println(maze.gameMap)
+	maze.gameMap[maze.startingPosition[0]][maze.startingPosition[1]] = "X"
 
 	startTime := time.Now()
 	//Able to choose what type of algo in the future
-	gameMap = randomAlgo(gameMap, startingPosition, height, width)
+	maze.gameMap = maze.randomAlgo()
 
 	duration := time.Since(startTime)
 	fmt.Printf("Time taken to generate maze:%s", duration)
-	// walls := [][]int{}
-	// walls = append()
-	return gameMap
+	return maze.gameMap
 }
 
-func randomAlgo(gameMap [][]string, startingPosition []int, height, width int) [][]string {
+func (maze *Maze) randomAlgo() [][]string {
 	//Move and remove the wall between each other DONE
 	//Randomize whether to go vertical or horizontal DONE
 	//Empty cells is " ", so find number of " " and we can know the amount of empty cells and then while there is still empty cells
@@ -96,36 +85,36 @@ func randomAlgo(gameMap [][]string, startingPosition []int, height, width int) [
 	//If it has not moved, it will keep looping but I'm currently not sure how to let it determine that it is impossible to move or it's just really
 	//unlucky. just check neighbouring cells around current position to see if they are visited or not dumbass wtf
 	visitedCells := make([][]int, 0)
-	currentPosition := make([]int, 2)
+	maze.currentPosition = make([]int, 2)
 
-	currentPosition[0], currentPosition[1] = startingPosition[0], startingPosition[1]
+	maze.currentPosition[0], maze.currentPosition[1] = maze.startingPosition[0], maze.startingPosition[1]
 	continueLoop := true
 	//REMEMBER TO CHANGE THIS FOR LOOP CONDITION
 	for continueLoop {
 		//TIME LAG FOR VISUAL PURPOSES
-		// time.Sleep(100 * time.Millisecond)
-		gameMap[currentPosition[0]][currentPosition[1]] = " "
+		// time.Sleep(500 * time.Millisecond)
+		maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 		var moved bool = false
 		//Could get stuck forever if you're really that unlucky but it's suppose to be random tho idk
 		for !moved {
 			// fmt.Scanf("Hello")
 			// fmt.Printf("Current position: %d,%d\n", currentPosition[0], currentPosition[1])
 
-			upCondition := currentPosition[0]-2 < 0 || checkWall(gameMap, []int{currentPosition[0] - 2, currentPosition[1]}) < 4
-			downCondition := currentPosition[0]+2 > height || checkWall(gameMap, []int{currentPosition[0] + 2, currentPosition[1]}) < 4
-			rightCondition := currentPosition[1]+2 > width || checkWall(gameMap, []int{currentPosition[0], currentPosition[1] + 2}) < 4
-			leftCondition := currentPosition[1]-2 < 0 || checkWall(gameMap, []int{currentPosition[0], currentPosition[1] - 2}) < 4
+			upCondition := maze.currentPosition[0]-2 < 0 || checkWall(maze.gameMap, []int{maze.currentPosition[0] - 2, maze.currentPosition[1]}) < 4
+			downCondition := maze.currentPosition[0]+2 > maze.height || checkWall(maze.gameMap, []int{maze.currentPosition[0] + 2, maze.currentPosition[1]}) < 4
+			rightCondition := maze.currentPosition[1]+2 > maze.width || checkWall(maze.gameMap, []int{maze.currentPosition[0], maze.currentPosition[1] + 2}) < 4
+			leftCondition := maze.currentPosition[1]-2 < 0 || checkWall(maze.gameMap, []int{maze.currentPosition[0], maze.currentPosition[1] - 2}) < 4
 			// fmt.Printf("Up:%t, Down:%t, Right:%t, Left:%t\n", upCondition, downCondition, rightCondition, leftCondition)
 			// fmt.Printf("%t\n", upCondition && downCondition && rightCondition && leftCondition)
 
 			if upCondition && downCondition && rightCondition && leftCondition {
 				// fmt.Println("HELP STEP BRO IM STUCK")
 				// fmt.Printf("%d,%d", currentPosition[0], currentPosition[1])
-				gameMap[currentPosition[0]][currentPosition[1]] = " "
+				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 				// fmt.Printf("%v", visitedCells)
 				//NGL I'm not sure about the code below
 				if len(visitedCells) >= 1 {
-					currentPosition[0], currentPosition[1] = visitedCells[len(visitedCells)-1][0], visitedCells[len(visitedCells)-1][1]
+					maze.currentPosition[0], maze.currentPosition[1] = visitedCells[len(visitedCells)-1][0], visitedCells[len(visitedCells)-1][1]
 				} else {
 					continueLoop = false
 					break
@@ -140,18 +129,18 @@ func randomAlgo(gameMap [][]string, startingPosition []int, height, width int) [
 				if rand.Intn(2) == 1 {
 					//Going Up
 					//If it does not go over the maze AND the cell has not been visited
-					if currentPosition[0]-2 > 0 && checkWall(gameMap, []int{currentPosition[0] - 2, currentPosition[1]}) == 4 {
+					if maze.currentPosition[0]-2 > 0 && checkWall(maze.gameMap, []int{maze.currentPosition[0] - 2, maze.currentPosition[1]}) == 4 {
 						// fmt.Println("UP")
-						gameMap[currentPosition[0]-1][currentPosition[1]] = " "
-						currentPosition[0] = currentPosition[0] - 2
+						maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] = " "
+						maze.currentPosition[0] = maze.currentPosition[0] - 2
 						moved = true
 					}
 				} else {
 					//Going Down
-					if currentPosition[0]+2 < height && checkWall(gameMap, []int{currentPosition[0] + 2, currentPosition[1]}) == 4 {
+					if maze.currentPosition[0]+2 < maze.height && checkWall(maze.gameMap, []int{maze.currentPosition[0] + 2, maze.currentPosition[1]}) == 4 {
 						// fmt.Println("DOWN")
-						gameMap[currentPosition[0]+1][currentPosition[1]] = " "
-						currentPosition[0] = currentPosition[0] + 2
+						maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] = " "
+						maze.currentPosition[0] = maze.currentPosition[0] + 2
 						moved = true
 					}
 				}
@@ -160,17 +149,17 @@ func randomAlgo(gameMap [][]string, startingPosition []int, height, width int) [
 				//If it does not go over the maze
 				// fmt.Println("HORIZONTAL")
 				if rand.Intn(2) == 1 {
-					if currentPosition[1]+2 < width && checkWall(gameMap, []int{currentPosition[0], currentPosition[1] + 2}) == 4 {
+					if maze.currentPosition[1]+2 < maze.width && checkWall(maze.gameMap, []int{maze.currentPosition[0], maze.currentPosition[1] + 2}) == 4 {
 						// fmt.Println("RIGHT")
-						gameMap[currentPosition[0]][currentPosition[1]+1] = " "
-						currentPosition[1] = currentPosition[1] + 2
+						maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] = " "
+						maze.currentPosition[1] = maze.currentPosition[1] + 2
 						moved = true
 					}
 				} else {
-					if currentPosition[1]-2 > 0 && checkWall(gameMap, []int{currentPosition[0], currentPosition[1] - 2}) == 4 {
+					if maze.currentPosition[1]-2 > 0 && checkWall(maze.gameMap, []int{maze.currentPosition[0], maze.currentPosition[1] - 2}) == 4 {
 						// fmt.Println("LEFT")
-						gameMap[currentPosition[0]][currentPosition[1]-1] = " "
-						currentPosition[1] = currentPosition[1] - 2
+						maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] = " "
+						maze.currentPosition[1] = maze.currentPosition[1] - 2
 						moved = true
 					}
 				}
@@ -178,13 +167,88 @@ func randomAlgo(gameMap [][]string, startingPosition []int, height, width int) [
 
 		}
 
-		gameMap[currentPosition[0]][currentPosition[1]] = "X"
-		visualizeMaze(gameMap, width)
-		copiedPosition := []int{currentPosition[0], currentPosition[1]}
+		maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = "X"
+		maze.visualizeMaze()
+		copiedPosition := []int{maze.currentPosition[0], maze.currentPosition[1]}
 		visitedCells = append(visitedCells, copiedPosition)
 	}
+	maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
+	maze.currentPosition[0], maze.currentPosition[1] = maze.startingPosition[0], maze.startingPosition[1]
+	maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = "X"
+	return maze.gameMap
+}
 
-	return gameMap
+func (maze *Maze) movement() {
+	tty, err := tty.Open()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tty.Close()
+
+	for {
+		r, err := tty.ReadRune()
+		if err != nil {
+			log.Fatal(err)
+		}
+		switch string(r) {
+		case "w":
+			if maze.checkMovement("w") {
+				maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] = "X"
+				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
+				maze.currentPosition[0] = maze.currentPosition[0] - 1
+			}
+		case "a":
+			if maze.checkMovement("a") {
+				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] = "X"
+				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
+				maze.currentPosition[1] = maze.currentPosition[1] - 1
+			}
+		case "s":
+			if maze.checkMovement("s") {
+				maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] = "X"
+				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
+				maze.currentPosition[0] = maze.currentPosition[0] + 1
+			}
+		case "d":
+			if maze.checkMovement("d") {
+				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] = "X"
+				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
+				maze.currentPosition[1] = maze.currentPosition[1] + 1
+			}
+		case "q":
+			os.Exit(3)
+		}
+		maze.visualizeMaze()
+		//Displays which key the user pressed
+		// fmt.Println("\nKey press => " + string(r))
+	}
+}
+
+func (maze *Maze) generateStart() []int {
+	maze.startingPosition = []int{rand.Intn(maze.height-1-1) + 1, rand.Intn(maze.width-2) + 1}
+	return maze.startingPosition
+}
+
+func main() {
+	// This program was designed to have and odd width and height
+	fmt.Println("Enter your desired width ")
+	newMaze := Maze{numSteps: 0}
+	fmt.Scanln(&newMaze.width)
+	fmt.Println("Enter your desired health ")
+	fmt.Scanln(&newMaze.height)
+	if newMaze.width%2 == 0 {
+		newMaze.width++
+	}
+	if newMaze.height%2 == 0 {
+		newMaze.height++
+	}
+	newMaze.initialize()
+	newMaze.generateMaze()
+	continueMovement := false
+	for !continueMovement {
+		newMaze.movement()
+	}
+	// visualizeMaze(generatedMaze, width)
 }
 
 func checkWall(gameMap [][]string, cellToCheck []int) int {
@@ -217,16 +281,41 @@ func checkWall(gameMap [][]string, cellToCheck []int) int {
 	return totalWalls
 }
 
-func visualizeMaze(maze [][]string, width int) {
+func (maze Maze) checkMovement(movementKey string) bool {
+	// if movementKey == "w" && maze.currentPosition[0]-1 > 0 && maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] == " " {
+	// 	return true
+	// }
+	// return false
+	//ChatGPT optimised my method below, original on top
+	switch movementKey {
+	case "w":
+		// Check if moving up is valid
+		return maze.currentPosition[0]-1 > 0 && maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] == " "
+	case "a":
+		// Check if moving left is valid
+		return maze.currentPosition[1]-1 > 0 && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] == " "
+	case "s":
+		// Check if moving down is valid
+		return maze.currentPosition[0]+1 < maze.height && maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] == " "
+	case "d":
+		// Check if moving right is valid
+		return maze.currentPosition[1]+1 < maze.width && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] == " "
+	default:
+		// Invalid movement key
+		return false
+	}
+}
+
+func (maze *Maze) visualizeMaze() {
 	//Clear terminal
-	fmt.Print("\033[H\033[2J")
-	for i := 0; i < 1+width*2; i++ {
+	// fmt.Print("\033[H\033[2J")
+	for i := 0; i < 1+maze.width*2; i++ {
 		fmt.Print("-")
 	}
 	fmt.Println("\n")
-	fmt.Printf("Current number of algorithm steps taken: %d\n", numSteps)
-	numSteps++
-	for i := range maze {
-		fmt.Println(maze[i])
+	fmt.Printf("Current number of algorithm steps taken: %d\n", maze.numSteps)
+	maze.numSteps++
+	for i := range maze.gameMap {
+		fmt.Println(maze.gameMap[i])
 	}
 }
