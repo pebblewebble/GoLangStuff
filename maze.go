@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"time"
@@ -19,8 +20,7 @@ import (
 // Maybe add save maze function in the future?
 
 // Global var
-var numSteps int = 0
-
+// var numSteps int = 0
 // var width int = 31
 // var height int = 31
 
@@ -31,6 +31,13 @@ type Maze struct {
 	startingPosition []int
 	currentPosition  []int
 	gameMap          [][]string
+	exit             []int
+	algoSteps        int
+}
+
+type Enemy struct {
+	maze            Maze
+	currentPosition []int
 }
 
 func (maze *Maze) initialize() [][]string {
@@ -72,6 +79,16 @@ func (maze *Maze) generateMaze() [][]string {
 	duration := time.Since(startTime)
 	fmt.Printf("Time taken to generate maze:%s", duration)
 	return maze.gameMap
+}
+
+func (enemy *Enemy) greedyBestFirst() {
+	// upperCellHeuristic=getTotalDistance([]int{enemy.currentPosition[0]-1,enemy.currentPosition[1]}, enemy.maze.currentPosition)
+}
+
+func getTotalDistance(enemyPos, playerPos []int) int {
+	heightDistance := math.Abs(math.Inf(enemyPos[0] - playerPos[0]))
+	widthDistance := math.Abs(math.Inf(enemyPos[1] - playerPos[1]))
+	return int(heightDistance + widthDistance)
 }
 
 func (maze *Maze) randomAlgo() [][]string {
@@ -168,6 +185,7 @@ func (maze *Maze) randomAlgo() [][]string {
 		}
 
 		maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = "X"
+		maze.algoSteps++
 		maze.visualizeMaze()
 		copiedPosition := []int{maze.currentPosition[0], maze.currentPosition[1]}
 		visitedCells = append(visitedCells, copiedPosition)
@@ -178,7 +196,7 @@ func (maze *Maze) randomAlgo() [][]string {
 	return maze.gameMap
 }
 
-func (maze *Maze) movement() {
+func (maze *Maze) movement(energyPos [][]int) {
 	tty, err := tty.Open()
 	if err != nil {
 		log.Fatal(err)
@@ -218,8 +236,10 @@ func (maze *Maze) movement() {
 		case "q":
 			os.Exit(3)
 		}
+		maze.checkExit()
+		maze.numSteps++
 		maze.visualizeMaze()
-		//Displays which key the user pressed
+		//Displays which key the user
 		// fmt.Println("\nKey press => " + string(r))
 	}
 }
@@ -229,13 +249,53 @@ func (maze *Maze) generateStart() []int {
 	return maze.startingPosition
 }
 
+func (maze *Maze) generateExit() {
+	for {
+		maze.exit = []int{rand.Intn(len(maze.gameMap)), rand.Intn(len(maze.gameMap[0]))}
+		if maze.gameMap[maze.exit[0]][maze.exit[1]] != color.HiBlueString("*") {
+			maze.gameMap[maze.exit[0]][maze.exit[1]] = color.HiYellowString("O")
+			break
+		}
+	}
+}
+
+func (maze *Maze) generateEnergy(numberOfOrbs int) [][]int {
+	energyPos := make([][]int, numberOfOrbs)
+	for i := 0; i < numberOfOrbs; i++ {
+		for {
+			mazeEnergy := []int{rand.Intn(len(maze.gameMap)), rand.Intn(len(maze.gameMap[0]))}
+			if maze.gameMap[mazeEnergy[0]][mazeEnergy[1]] != color.HiBlueString("*") &&
+				maze.gameMap[mazeEnergy[0]][mazeEnergy[1]] != color.HiBlueString("X") &&
+				maze.gameMap[mazeEnergy[0]][mazeEnergy[1]] != color.HiBlueString("O") {
+				maze.gameMap[mazeEnergy[0]][mazeEnergy[1]] = color.HiGreenString("E")
+				energyPos = append(energyPos, mazeEnergy)
+				break
+			}
+		}
+	}
+	return energyPos
+}
+
+func (maze *Maze) checkExit() {
+	if maze.gameMap[maze.exit[0]][maze.exit[1]] != color.HiYellowString("O") {
+		maze.generateExit()
+	}
+}
+
+// func checkEnergy(energyCords [][]int) {
+
+// }
+
 func main() {
 	// This program was designed to have and odd width and height
 	fmt.Println("Enter your desired width ")
 	newMaze := Maze{numSteps: 0}
 	fmt.Scanln(&newMaze.width)
-	fmt.Println("Enter your desired health ")
+	fmt.Println("Enter your desired height ")
 	fmt.Scanln(&newMaze.height)
+	fmt.Println("Enter your desired energy orbs ")
+	numOrb := 0
+	fmt.Scanln(&numOrb)
 	if newMaze.width%2 == 0 {
 		newMaze.width++
 	}
@@ -244,9 +304,11 @@ func main() {
 	}
 	newMaze.initialize()
 	newMaze.generateMaze()
+	newMaze.generateExit()
+	energyPos := newMaze.generateEnergy(numOrb)
 	continueMovement := false
 	for !continueMovement {
-		newMaze.movement()
+		newMaze.movement(energyPos)
 	}
 	// visualizeMaze(generatedMaze, width)
 }
@@ -290,16 +352,16 @@ func (maze Maze) checkMovement(movementKey string) bool {
 	switch movementKey {
 	case "w":
 		// Check if moving up is valid
-		return maze.currentPosition[0]-1 > 0 && maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] == " "
+		return maze.currentPosition[0]-1 > 0 && maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] != color.HiBlueString("*")
 	case "a":
 		// Check if moving left is valid
-		return maze.currentPosition[1]-1 > 0 && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] == " "
+		return maze.currentPosition[1]-1 > 0 && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] != color.HiBlueString("*")
 	case "s":
 		// Check if moving down is valid
-		return maze.currentPosition[0]+1 < maze.height && maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] == " "
+		return maze.currentPosition[0]+1 < maze.height && maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] != color.HiBlueString("*")
 	case "d":
 		// Check if moving right is valid
-		return maze.currentPosition[1]+1 < maze.width && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] == " "
+		return maze.currentPosition[1]+1 < maze.width && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] != color.HiBlueString("*")
 	default:
 		// Invalid movement key
 		return false
@@ -308,13 +370,13 @@ func (maze Maze) checkMovement(movementKey string) bool {
 
 func (maze *Maze) visualizeMaze() {
 	//Clear terminal
-	// fmt.Print("\033[H\033[2J")
+	fmt.Print("\033[H\033[2J")
 	for i := 0; i < 1+maze.width*2; i++ {
 		fmt.Print("-")
 	}
 	fmt.Println("\n")
-	fmt.Printf("Current number of algorithm steps taken: %d\n", maze.numSteps)
-	maze.numSteps++
+	fmt.Printf("Number of steps to create maze: %d\n", maze.algoSteps)
+	fmt.Printf("Number of steps you have taken: %d\n", maze.numSteps)
 	for i := range maze.gameMap {
 		fmt.Println(maze.gameMap[i])
 	}
