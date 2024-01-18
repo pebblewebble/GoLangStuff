@@ -93,44 +93,6 @@ func getTotalDistance(enemyPos, playerPos []int) int {
 	return int(heightDistance + widthDistance)
 }
 
-// func (enemy *Enemy) dfs(node []int, counter int, visited map[[2]int]int, nonVisited [][]int, graph map[[2]int][][]int) {
-// 	fmt.Println(visited, node[0] == enemy.maze.currentPosition[0] && node[1] == enemy.maze.currentPosition[1])
-// 	if node[0] == enemy.maze.currentPosition[0] && node[1] == enemy.maze.currentPosition[1] {
-// 		for key, value := range visited {
-// 			if value == 1 {
-// 				fmt.Println("HELLO")
-// 				fmt.Println(key)
-// 				enemy.currentPosition[0] = key[0]
-// 				enemy.currentPosition[1] = key[1]
-// 				return
-// 			}
-// 		}
-// 	}
-// 	if _, exists := visited[[2]int(node)]; !exists {
-// 		visited[[2]int(node)] = counter
-// 		counter++
-// 		key := [2]int{node[0], node[1]}
-// 		currentPositionNeighbour := make([][]int, len(graph[key]))
-// 		copy(currentPositionNeighbour, graph[key])
-
-// 		for i := range currentPositionNeighbour {
-// 			if _, exists := visited[[2]int(currentPositionNeighbour[i])]; !exists {
-// 				nonVisited = append(nonVisited, currentPositionNeighbour[i])
-// 			}
-// 		}
-
-// 		copy(node, nonVisited[0])
-// 		// enemy.maze.gameMap[node[0]][node[1]] = "C"
-// 		//Add and remove top of stack but it adds before this line tho
-// 		if len(nonVisited) > 0 {
-// 			nonVisited = nonVisited[1:]
-// 		}
-// 	}
-// 	if len(nonVisited) != 0 {
-// 		enemy.dfs(node, counter, visited, nonVisited, graph)
-// 	}
-// }
-
 // func (enemy *Enemy) dfs(node [2]int, counter int, visited map[[2]int]int, nonVisited [][2]int, graph map[[2]int][][]int) {
 // 	fmt.Println("NEWWWWWWWWWWWWWWWWWWWW")
 // 	nonVisited = append(nonVisited, node)
@@ -217,43 +179,125 @@ func getTotalDistance(enemyPos, playerPos []int) int {
 // 	return node
 // }
 
+//Stuck in loop
+// func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited map[[2]int]int, nonVisited [][2]int, graph map[[2]int][][]int) {
+// 	fmt.Println("NEWWWWWWWWWWWWWWWWWWWW")
+// 	fmt.Println(goal)
+// 	nonVisited = append(nonVisited, node)
+// 	// var notBackTrack bool = true
+// 	var previousNode []int = []int{node[0] + 1, node[1] + 1}
+// 	for len(nonVisited) != 0 {
+// 		fmt.Println("current")
+// 		fmt.Println(node)
+// 		fmt.Println("goal")
+// 		fmt.Println(goal)
+// 		if node[0] == goal[0] && node[1] == goal[1] {
+// 			for key, value := range visited {
+// 				if value == 1 {
+// 					enemy.currentPosition[0] = key[0]
+// 					enemy.currentPosition[1] = key[1]
+// 					printVisited(visited)
+// 					return
+// 				}
+// 			}
+// 		}
+// 		enemy.maze.gameMap[node[0]][node[1]] = " "
+// 		node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
+// 		if int(math.Abs(float64(node[0]-previousNode[0]))) >= 2 ||
+// 			int(math.Abs(float64(node[1]-previousNode[1]))) >= 2 {
+// 			visited2 := make(map[[2]int]int)
+// 			nonVisited2 := make([][2]int, 0)
+// 			counter2 := 0
+// 			enemy.dfs([2]int(previousNode), node, counter2, visited2, nonVisited2, graph)
+// 		}
+// 		previousNode[0], previousNode[1] = node[0], node[1]
+
+// 		enemy.maze.gameMap[node[0]][node[1]] = color.HiRedString("C")
+// 		enemy.maze.visualizeMaze()
+// 		// var userInput string
+// 		// fmt.Scan(&userInput)
+// 		time.Sleep(350 * time.Millisecond)
+// 		if _, exists := visited[[2]int(node)]; !exists {
+// 			//Doesn't exist? add into visited
+// 			visited[[2]int(node)] = counter
+// 			counter++
+// 			//Get the current node's neighbours
+// 			key := [2]int{node[0], node[1]}
+// 			currentPositionNeighbour := make([][]int, len(graph[key]))
+// 			copy(currentPositionNeighbour, graph[key])
+// 			//Remove first element
+// 			nonVisited = nonVisited[1:]
+// 			//For each of the neighbour, add them back unless they've been visited b4
+// 			for i := range currentPositionNeighbour {
+// 				temp := [2]int{}
+// 				copy(temp[:], currentPositionNeighbour[i])
+// 				if _, exists := visited[temp]; !exists {
+// 					nonVisited = append([][2]int{temp}, nonVisited...)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
+
 func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited map[[2]int]int, nonVisited [][2]int, graph map[[2]int][][]int) {
-	fmt.Println("NEWWWWWWWWWWWWWWWWWWWW")
-	fmt.Println(goal)
+	// fmt.Println("NEWWWWWWWWWWWWWWWWWWWW")
+	// fmt.Println(goal)
 	nonVisited = append(nonVisited, node)
 	// var notBackTrack bool = true
 	var previousNode []int = []int{node[0] + 1, node[1] + 1}
+	descAmount := 1
 	for len(nonVisited) != 0 {
-		fmt.Println("current")
-		fmt.Println(node)
-		fmt.Println("goal")
-		fmt.Println(goal)
+		// fmt.Println("current")
+		// fmt.Println(node)
+		// fmt.Println("goal")
+		// fmt.Println(goal)
 		if node[0] == goal[0] && node[1] == goal[1] {
 			for key, value := range visited {
 				if value == 1 {
 					enemy.currentPosition[0] = key[0]
 					enemy.currentPosition[1] = key[1]
-					printVisited(visited)
+					fmt.Println("HI IM KEY")
+					fmt.Println(enemy.currentPosition)
+					// printVisited(visited)
 					return
 				}
 			}
 		}
 		enemy.maze.gameMap[node[0]][node[1]] = " "
-		node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
-		if int(math.Abs(float64(node[0]-previousNode[0]))) >= 2 ||
-			int(math.Abs(float64(node[1]-previousNode[1]))) >= 2 {
-			visited2 := make(map[[2]int]int)
-			nonVisited2 := make([][2]int, 0)
-			counter2 := 0
-			enemy.dfs([2]int(previousNode), node, counter2, visited2, nonVisited2, graph)
+
+		key := [2]int{node[0], node[1]}
+		currentPositionNeighbour := make([][]int, len(graph[key]))
+		copy(currentPositionNeighbour, graph[key])
+		// fmt.Println(currentPositionNeighbour)
+		allNeighbourVisited := true
+		for i := range currentPositionNeighbour {
+			temp := [2]int{}
+			copy(temp[:], currentPositionNeighbour[i])
+			if _, exists := visited[temp]; !exists {
+				allNeighbourVisited = false
+			}
 		}
+
+		if allNeighbourVisited {
+			node = sortVisited(visited, true, descAmount)
+			// fmt.Println("Visited")
+			// fmt.Println(visited)
+			// fmt.Println("Current Node")
+			// fmt.Println(node)
+			descAmount++
+		} else {
+			node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
+			//reset descAmount after escaping the deadend
+			descAmount = 1
+		}
+
 		previousNode[0], previousNode[1] = node[0], node[1]
 
 		enemy.maze.gameMap[node[0]][node[1]] = color.HiRedString("C")
 		enemy.maze.visualizeMaze()
 		// var userInput string
 		// fmt.Scan(&userInput)
-		time.Sleep(350 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		if _, exists := visited[[2]int(node)]; !exists {
 			//Doesn't exist? add into visited
 			visited[[2]int(node)] = counter
@@ -276,7 +320,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited map[[2]in
 	}
 }
 
-func sortVisited(visited map[[2]int]int, largest bool) [2]int {
+func sortVisited(visited map[[2]int]int, largest bool, i int) [2]int {
 	keys := make([][2]int, 0, len(visited))
 
 	// Populate the slice with keys from the map
@@ -291,7 +335,7 @@ func sortVisited(visited map[[2]int]int, largest bool) [2]int {
 
 	// Return the desired key
 	if largest {
-		return keys[len(keys)-1]
+		return keys[len(keys)-i]
 	} else {
 		return keys[0]
 	}
@@ -339,7 +383,6 @@ func (enemy *Enemy) makeGraph() map[[2]int][][]int {
 			}
 		}
 	}
-	// fmt.Println(graph)
 	return graph
 }
 
@@ -361,7 +404,7 @@ func (maze *Maze) randomAlgo() [][]string {
 	//REMEMBER TO CHANGE THIS FOR LOOP CONDITION
 	for continueLoop {
 		//TIME LAG FOR VISUAL PURPOSES
-		// time.Sleep(500 * time.Millisecond)
+		// time.Sleep(100 * time.Millisecond)
 		maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 		var moved bool = false
 		//Could get stuck forever if you're really that unlucky but it's suppose to be random tho idk
@@ -438,7 +481,7 @@ func (maze *Maze) randomAlgo() [][]string {
 
 		maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = "X"
 		maze.algoSteps++
-		maze.visualizeMaze()
+		// maze.visualizeMaze()
 		copiedPosition := []int{maze.currentPosition[0], maze.currentPosition[1]}
 		visitedCells = append(visitedCells, copiedPosition)
 	}
@@ -491,6 +534,7 @@ func (maze *Maze) movement(energyPos [][]int, enemy *Enemy) {
 		maze.checkExit()
 		checkEnergy(energyPos)
 		maze.numSteps++
+		fmt.Println("Hello")
 
 		visited := make(map[[2]int]int)
 		nonVisited := make([][2]int, 0)
@@ -499,7 +543,11 @@ func (maze *Maze) movement(energyPos [][]int, enemy *Enemy) {
 		goal := [2]int{enemy.maze.currentPosition[0], enemy.maze.currentPosition[1]}
 		maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
 		//Updates enemy currentPosition here
+		fmt.Println("BEFORE")
+		fmt.Println(node)
 		enemy.dfs(node, goal, 0, visited, nonVisited, graph)
+		fmt.Println("AFTER")
+		fmt.Println(enemy.currentPosition)
 		//Replace and draw
 		maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = color.HiRedString("C")
 		maze.visualizeMaze()
