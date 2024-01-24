@@ -279,7 +279,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited map[[2]in
 		}
 
 		if allNeighbourVisited {
-			node = sortVisited(visited, true, descAmount)
+			node = getLargest(visited, true, descAmount)
 			// fmt.Println("Visited")
 			// fmt.Println(visited)
 			// fmt.Println("Current Node")
@@ -320,7 +320,20 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited map[[2]in
 	}
 }
 
-func sortVisited(visited map[[2]int]int, largest bool, i int) [2]int {
+func (enemy *Enemy) traverseMap(visited map[[2]int]int) {
+	keys := sortVisited(visited)
+	for _, key := range keys {
+		enemy.maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
+		time.Sleep(time.Millisecond * 300)
+		enemy.currentPosition[0], enemy.currentPosition[1] = key[0], key[1]
+		enemy.maze.gameMap[key[0]][key[1]] = color.HiRedString("C")
+		enemy.maze.visualizeMaze()
+	}
+}
+
+func sortVisited(visited map[[2]int]int) [][2]int {
+	// printVisited(visited)
+	// fmt.Println(i)
 	keys := make([][2]int, 0, len(visited))
 
 	// Populate the slice with keys from the map
@@ -333,6 +346,12 @@ func sortVisited(visited map[[2]int]int, largest bool, i int) [2]int {
 		return visited[keys[i]] < visited[keys[j]]
 	})
 
+	return keys
+
+}
+
+func getLargest(visited map[[2]int]int, largest bool, i int) [2]int {
+	keys := sortVisited(visited)
 	// Return the desired key
 	if largest {
 		return keys[len(keys)-i]
@@ -343,17 +362,7 @@ func sortVisited(visited map[[2]int]int, largest bool, i int) [2]int {
 
 func printVisited(visited map[[2]int]int) {
 	// Create a slice to store the keys for sorting
-	keys := make([][2]int, 0, len(visited))
-
-	// Populate the slice with keys from the map
-	for key := range visited {
-		keys = append(keys, key)
-	}
-
-	// Sort the keys based on their corresponding values
-	sort.Slice(keys, func(i, j int) bool {
-		return visited[keys[i]] < visited[keys[j]]
-	})
+	keys := sortVisited(visited)
 
 	// Print the keys in ascending order of the counter
 	for _, key := range keys {
