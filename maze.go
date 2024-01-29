@@ -114,6 +114,8 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 		copy(currentPositionNeighbour, graph[key])
 		allNeighbourVisited := true
 		counter := len(currentPositionNeighbour)
+		// One bad thing is that if it surrounded by deadends/visited nodes, it will retrace its step which means
+		// it will go thru some of the same deadend again as well.
 		for i := range currentPositionNeighbour {
 			if counter == 0 {
 				break
@@ -134,9 +136,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 			allNeighbourVisited = true
 		}
 		if len(visited) != 0 && allNeighbourVisited {
-			fmt.Println(node)
 			node[0], node[1] = visited[len(visited)-descAmount][0], visited[len(visited)-descAmount][1]
-			fmt.Println(visited, descAmount)
 			visited = append(visited, []int{node[0], node[1]})
 			descAmount += 2
 		} else {
@@ -568,8 +568,8 @@ func (maze Maze) checkMovement(movementKey string) bool {
 
 func (maze *Maze) visualizeMaze() {
 	//Clear terminal
-	// fmt.Print("\033[H\033[2J")
-	// fmt.Printf("\033[%d;%dH", 0+1, 0+1)
+	fmt.Print("\033[H\033[2J")
+	fmt.Printf("\033[%d;%dH", 0+1, 0+1)
 	for i := 0; i < 1+maze.width*2; i++ {
 		fmt.Print("-")
 	}
