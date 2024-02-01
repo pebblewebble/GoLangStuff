@@ -99,13 +99,9 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 	descAmount := 2
 	for len(nonVisited) != 0 {
 		if node[0] == goal[0] && node[1] == goal[1] {
-			for _, i := range visited {
-				if i[0] == goal[0] && i[1] == goal[1] {
-					enemy.currentPosition[0] = i[0]
-					enemy.currentPosition[1] = i[1]
-					return
-				}
-			}
+			enemy.currentPosition[0] = visited[0][0]
+			enemy.currentPosition[1] = visited[0][1]
+			return
 		}
 		enemy.maze.gameMap[node[0]][node[1]] = " "
 
