@@ -95,12 +95,14 @@ func getTotalDistance(enemyPos, playerPos []int) int {
 
 func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, nonVisited [][2]int, graph map[[2]int][][]int) {
 	nonVisited = append(nonVisited, node)
+	callStack := [][]int{}
 	var previousNode []int = []int{node[0] + 1, node[1] + 1}
 	descAmount := 2
 	for len(nonVisited) != 0 {
 		if node[0] == goal[0] && node[1] == goal[1] {
 			enemy.currentPosition[0] = visited[0][0]
 			enemy.currentPosition[1] = visited[0][1]
+			enemy.traverseMap(callStack)
 			return
 		}
 		enemy.maze.gameMap[node[0]][node[1]] = " "
@@ -133,12 +135,11 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 		}
 		if len(visited) != 0 && allNeighbourVisited {
 			node[0], node[1] = visited[len(visited)-descAmount][0], visited[len(visited)-descAmount][1]
-			visited = append(visited, []int{node[0], node[1]})
-			descAmount += 2
+			descAmount += 1
 		} else {
 			node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
 			//reset descAmount after escaping the deadend
-			descAmount = 2
+			descAmount = 1
 		}
 
 		previousNode[0], previousNode[1] = node[0], node[1]
@@ -146,7 +147,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 		enemy.maze.visualizeMaze()
 		// var userInput string
 		// fmt.Scan(&userInput)
-		time.Sleep(250 * time.Millisecond)
+		// time.Sleep(250 * time.Millisecond)
 
 		existsCheck := false
 		for _, i := range visited {
@@ -158,6 +159,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 		if !existsCheck {
 			//Doesn't exist? add into visited
 			visited = append(visited, []int{node[0], node[1]})
+			callStack = append(callStack, []int{node[0], node[1]})
 			//Get the current node's neighbours
 			key := [2]int{node[0], node[1]}
 			currentPositionNeighbour := make([][]int, len(graph[key]))
@@ -183,14 +185,10 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 	}
 }
 
-func (enemy *Enemy) traverseMap(visited map[[2]int]int) {
-	keys := sortVisited(visited)
-	for _, key := range keys {
-		enemy.maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
-		time.Sleep(time.Millisecond * 300)
-		enemy.currentPosition[0], enemy.currentPosition[1] = key[0], key[1]
-		enemy.maze.gameMap[key[0]][key[1]] = color.HiRedString("C")
-		enemy.maze.visualizeMaze()
+func (enemy *Enemy) traverseMap(visited [][]int) {
+	for _, i := range visited {
+		enemy.currentPosition[0], enemy.currentPosition[1] = i[0], i[1]
+		enemy.maze.gameMap[i[0]][i[1]] = color.HiRedString("C")
 	}
 }
 
