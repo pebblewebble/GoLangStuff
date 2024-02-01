@@ -100,12 +100,12 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 	descAmount := 2
 	for len(nonVisited) != 0 {
 		if node[0] == goal[0] && node[1] == goal[1] {
-			enemy.currentPosition[0] = visited[0][0]
-			enemy.currentPosition[1] = visited[0][1]
+			// enemy.currentPosition[0] = callStack[0][0]
+			// enemy.currentPosition[1] = callStack[0][1]
 			enemy.traverseMap(callStack)
 			return
 		}
-		enemy.maze.gameMap[node[0]][node[1]] = " "
+		// enemy.maze.gameMap[node[0]][node[1]] = " "
 
 		key := [2]int{node[0], node[1]}
 		currentPositionNeighbour := make([][]int, len(graph[key]))
@@ -135,19 +135,17 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 		}
 		if len(visited) != 0 && allNeighbourVisited {
 			node[0], node[1] = visited[len(visited)-descAmount][0], visited[len(visited)-descAmount][1]
+			//This part sometimes goes out of bounds
+			callStack = callStack[:len(callStack)-1]
 			descAmount += 1
 		} else {
 			node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
+
 			//reset descAmount after escaping the deadend
 			descAmount = 1
 		}
 
 		previousNode[0], previousNode[1] = node[0], node[1]
-		enemy.maze.gameMap[node[0]][node[1]] = color.HiRedString("C")
-		enemy.maze.visualizeMaze()
-		// var userInput string
-		// fmt.Scan(&userInput)
-		// time.Sleep(250 * time.Millisecond)
 
 		existsCheck := false
 		for _, i := range visited {
@@ -188,8 +186,10 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 func (enemy *Enemy) traverseMap(visited [][]int) {
 	for _, i := range visited {
 		time.Sleep(time.Millisecond * 250)
+		enemy.maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
 		enemy.currentPosition[0], enemy.currentPosition[1] = i[0], i[1]
 		enemy.maze.gameMap[i[0]][i[1]] = color.HiRedString("C")
+		enemy.maze.visualizeMaze()
 	}
 }
 
@@ -481,12 +481,14 @@ func main() {
 	// This program was designed to have and odd width and height
 	fmt.Println("Enter your desired width ")
 	newMaze := new(Maze)
-	fmt.Scanln(&newMaze.width)
+	// fmt.Scanln(&newMaze.width)
+	newMaze.width = 15
 	fmt.Println("Enter your desired height ")
-	fmt.Scanln(&newMaze.height)
+	// fmt.Scanln(&newMaze.height)
+	newMaze.height = 15
 	fmt.Println("Enter your desired energy orbs ")
 	numOrb := 0
-	fmt.Scanln(&numOrb)
+	// fmt.Scanln(&numOrb)
 	if newMaze.width%2 == 0 {
 		newMaze.width++
 	}
