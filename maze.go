@@ -187,6 +187,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 
 func (enemy *Enemy) traverseMap(visited [][]int) {
 	for _, i := range visited {
+		time.Sleep(time.Millisecond * 250)
 		enemy.currentPosition[0], enemy.currentPosition[1] = i[0], i[1]
 		enemy.maze.gameMap[i[0]][i[1]] = color.HiRedString("C")
 	}
