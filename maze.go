@@ -96,34 +96,28 @@ func getTotalDistance(enemyPos, playerPos []int) int {
 func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, nonVisited [][2]int, graph map[[2]int][][]int) {
 	nonVisited = append(nonVisited, node)
 	callStack := [][]int{}
-	// var previousNode []int = []int{node[0] + 1, node[1] + 1}
 	descAmount := 2
 	for len(nonVisited) != 0 {
 		if node[0] == goal[0] && node[1] == goal[1] {
-			// enemy.currentPosition[0] = callStack[0][0]
-			// enemy.currentPosition[1] = callStack[0][1]
-			enemy.traverseMap(callStack)
+			enemy.currentPosition[0] = callStack[1][0]
+			enemy.currentPosition[1] = callStack[1][1]
 			return
 		}
 
 		allNeighbourVisited := checkStuck(node, graph, visited)
 
-		if len(visited) != 0 && allNeighbourVisited {
+		if len(visited) != 0 && allNeighbourVisited && descAmount <= len(visited) {
 			node[0], node[1] = visited[len(visited)-descAmount][0], visited[len(visited)-descAmount][1]
 			//This part sometimes goes out of bounds
-			//callStack = callStack[:len(callStack)-1]
+			//I think the issue is that, for example the entire left side is stuck, and the only way to go to
+			//the goal is through the original spawn point which will cause the callStack to have 0?
+			//This method sometimes teleports idk why
+			if len(callStack) != 0 {
+				callStack = callStack[:len(callStack)-1]
+			}
+
 			descAmount += 1
 		} else {
-			for i := len(callStack) - 1; i >= 0; i-- {
-				if callStack[i][0] != tempNode[0] && callStack[i][1] != tempNode[1] {
-					// Remove the element at index i
-					fmt.Println(callStack[i], tempNode)
-
-					callStack = callStack[:len(callStack)-1]
-				} else {
-					break
-				}
-			}
 			node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
 			//reset descAmount after escaping the deadend
 			descAmount = 1
@@ -390,48 +384,52 @@ func (maze *Maze) movement(energyPos [][]int, enemy *Enemy) {
 				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 				maze.currentPosition[0] = maze.currentPosition[0] - 1
 			}
+			maze.afterMovementLogic(energyPos, enemy)
 		case "a":
 			if maze.checkMovement("a") {
 				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] = "X"
 				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 				maze.currentPosition[1] = maze.currentPosition[1] - 1
 			}
+			maze.afterMovementLogic(energyPos, enemy)
 		case "s":
 			if maze.checkMovement("s") {
 				maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] = "X"
 				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 				maze.currentPosition[0] = maze.currentPosition[0] + 1
 			}
+			maze.afterMovementLogic(energyPos, enemy)
 		case "d":
 			if maze.checkMovement("d") {
 				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] = "X"
 				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 				maze.currentPosition[1] = maze.currentPosition[1] + 1
 			}
+			maze.afterMovementLogic(energyPos, enemy)
 		case "q":
 			os.Exit(3)
 		}
-		maze.checkExit()
-		checkEnergy(energyPos)
-		maze.numSteps++
-		fmt.Println("Hello")
-
-		visited := [][]int{}
-		nonVisited := make([][2]int, 0)
-		graph := enemy.makeGraph()
-		node := [2]int{enemy.currentPosition[0], enemy.currentPosition[1]}
-		goal := [2]int{enemy.maze.currentPosition[0], enemy.maze.currentPosition[1]}
-		maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
-		//Updates enemy currentPosition here
-		fmt.Println("BEFORE")
-		fmt.Println(node)
-		enemy.dfs(node, goal, 0, visited, nonVisited, graph)
-		fmt.Println("AFTER")
-		fmt.Println(enemy.currentPosition)
-		//Replace and draw
-		maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = color.HiRedString("C")
-		maze.visualizeMaze()
 	}
+}
+
+func (maze *Maze) afterMovementLogic(energyPos [][]int, enemy *Enemy) {
+	maze.numSteps++
+	maze.checkExit()
+	checkEnergy(energyPos)
+
+	visited := [][]int{}
+	nonVisited := make([][2]int, 0)
+	graph := enemy.makeGraph()
+	node := [2]int{enemy.currentPosition[0], enemy.currentPosition[1]}
+	goal := [2]int{enemy.maze.currentPosition[0], enemy.maze.currentPosition[1]}
+	maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
+	//Updates enemy currentPosition here
+	fmt.Println(enemy.currentPosition)
+	enemy.dfs(node, goal, 0, visited, nonVisited, graph)
+	//Replace and draw
+	fmt.Println(enemy.currentPosition)
+	maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = color.HiRedString("C")
+	maze.visualizeMaze()
 }
 
 func (maze *Maze) generateStart() []int {
@@ -511,6 +509,7 @@ func main() {
 	enemy1.maze = *newMaze
 	enemy1.spawn()
 	energyPos := newMaze.generateEnergy(numOrb)
+	newMaze.visualizeMaze()
 	continueMovement := false
 	for !continueMovement {
 		newMaze.movement(energyPos, enemy1)
