@@ -34,10 +34,10 @@ type Maze struct {
 	gameMap          [][]string
 	exit             []int
 	algoSteps        int
+	enemy            []*Enemy
 }
 
 type Enemy struct {
-	maze            Maze
 	currentPosition []int
 }
 
@@ -184,14 +184,14 @@ func checkStuck(node [2]int, graph map[[2]int][][]int, visited [][]int) bool {
 	}
 }
 
-func (enemy *Enemy) traverseMap(visited [][]int) {
+func (maze *Maze) traverseMap(visited [][]int, enemy *Enemy) {
 	for _, i := range visited {
 		fmt.Println("TRAVERSE")
 		time.Sleep(time.Millisecond * 250)
-		enemy.maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
+		maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
 		enemy.currentPosition[0], enemy.currentPosition[1] = i[0], i[1]
-		enemy.maze.gameMap[i[0]][i[1]] = color.HiRedString("C")
-		enemy.maze.visualizeMaze()
+		maze.gameMap[i[0]][i[1]] = color.HiRedString("C")
+		maze.visualizeMaze()
 	}
 }
 
@@ -234,22 +234,22 @@ func printVisited(visited map[[2]int]int) {
 	}
 }
 
-func (enemy *Enemy) makeGraph() map[[2]int][][]int {
+func (maze *Maze) makeGraph() map[[2]int][][]int {
 	graph := make(map[[2]int][][]int)
-	for i := range enemy.maze.gameMap {
-		for x := range enemy.maze.gameMap[0] {
+	for i := range maze.gameMap {
+		for x := range maze.gameMap[0] {
 			neighbours := make([][]int, 0)
-			if enemy.maze.gameMap[i][x] != color.HiBlueString("*") {
-				if enemy.maze.gameMap[i-1][x] != color.HiBlueString("*") {
+			if maze.gameMap[i][x] != color.HiBlueString("*") {
+				if maze.gameMap[i-1][x] != color.HiBlueString("*") {
 					neighbours = append(neighbours, []int{i - 1, x})
 				}
-				if enemy.maze.gameMap[i+1][x] != color.HiBlueString("*") {
+				if maze.gameMap[i+1][x] != color.HiBlueString("*") {
 					neighbours = append(neighbours, []int{i + 1, x})
 				}
-				if enemy.maze.gameMap[i][x+1] != color.HiBlueString("*") {
+				if maze.gameMap[i][x+1] != color.HiBlueString("*") {
 					neighbours = append(neighbours, []int{i, x + 1})
 				}
-				if enemy.maze.gameMap[i][x-1] != color.HiBlueString("*") {
+				if maze.gameMap[i][x-1] != color.HiBlueString("*") {
 					neighbours = append(neighbours, []int{i, x - 1})
 				}
 				graph[[2]int{i, x}] = neighbours
@@ -412,21 +412,22 @@ func (maze *Maze) movement(energyPos [][]int, enemy *Enemy) {
 }
 
 func (maze *Maze) afterMovementLogic(energyPos [][]int, enemy *Enemy) {
+	//BTW this was made because if it is after the switch case, it will compute twice, meaning like the step
+	// will +2 instead.
 	maze.numSteps++
 	maze.checkExit()
+
 	checkEnergy(energyPos)
 
 	visited := [][]int{}
 	nonVisited := make([][2]int, 0)
-	graph := enemy.makeGraph()
+	graph := maze.makeGraph()
 	node := [2]int{enemy.currentPosition[0], enemy.currentPosition[1]}
-	goal := [2]int{enemy.maze.currentPosition[0], enemy.maze.currentPosition[1]}
+	goal := [2]int{maze.currentPosition[0], maze.currentPosition[1]}
 	maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
 	//Updates enemy currentPosition here
-	fmt.Println(enemy.currentPosition)
 	enemy.dfs(node, goal, 0, visited, nonVisited, graph)
 	//Replace and draw
-	fmt.Println(enemy.currentPosition)
 	maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = color.HiRedString("C")
 	maze.visualizeMaze()
 }
@@ -446,11 +447,11 @@ func (maze *Maze) generateExit() {
 	}
 }
 
-func (enemy *Enemy) spawn() {
+func (maze *Maze) spawn(enemy *Enemy) {
 	for {
-		enemy.currentPosition = []int{rand.Intn(len(enemy.maze.gameMap)), rand.Intn(len(enemy.maze.gameMap[0]))}
-		if enemy.maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] == " " {
-			enemy.maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = color.HiRedString("C")
+		enemy.currentPosition = []int{rand.Intn(len(maze.gameMap)), rand.Intn(len(maze.gameMap[0]))}
+		if maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] == " " {
+			maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = color.HiRedString("C")
 			break
 		}
 	}
@@ -505,8 +506,8 @@ func main() {
 	newMaze.generateMaze()
 	newMaze.generateExit()
 	enemy1 := new(Enemy)
-	enemy1.maze = *newMaze
-	enemy1.spawn()
+	newMaze.enemy = append(newMaze.enemy, enemy1)
+	newMaze.spawn(enemy1)
 	energyPos := newMaze.generateEnergy(numOrb)
 	newMaze.visualizeMaze()
 	continueMovement := false
