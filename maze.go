@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"sort"
 	"time"
 
 	"github.com/fatih/color"
@@ -98,7 +97,6 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 	callStack := [][]int{}
 	descAmount := 2
 	for len(nonVisited) != 0 {
-
 		if node[0] == goal[0] && node[1] == goal[1] {
 			enemy.currentPosition[0] = callStack[1][0]
 			enemy.currentPosition[1] = callStack[1][1]
@@ -186,56 +184,6 @@ func checkStuck(node [2]int, graph map[[2]int][][]int, visited [][]int) bool {
 		return false
 	} else {
 		return true
-	}
-}
-
-func (maze *Maze) traverseMap(visited [][]int, enemy *Enemy) {
-	for _, i := range visited {
-		fmt.Println("TRAVERSE")
-		time.Sleep(time.Millisecond * 250)
-		maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
-		enemy.currentPosition[0], enemy.currentPosition[1] = i[0], i[1]
-		maze.gameMap[i[0]][i[1]] = color.HiRedString("C")
-		maze.visualizeMaze()
-	}
-}
-
-func sortVisited(visited map[[2]int]int) [][2]int {
-	// printVisited(visited)
-	// fmt.Println(i)
-	keys := make([][2]int, 0, len(visited))
-
-	// Populate the slice with keys from the map
-	for key := range visited {
-		keys = append(keys, key)
-	}
-
-	// Sort the keys based on their corresponding values
-	sort.Slice(keys, func(i, j int) bool {
-		return visited[keys[i]] < visited[keys[j]]
-	})
-
-	return keys
-
-}
-
-func getLargest(visited map[[2]int]int, largest bool, i int) [2]int {
-	keys := sortVisited(visited)
-	// Return the desired key
-	if largest {
-		return keys[len(keys)-i]
-	} else {
-		return keys[0]
-	}
-}
-
-func printVisited(visited map[[2]int]int) {
-	// Create a slice to store the keys for sorting
-	keys := sortVisited(visited)
-
-	// Print the keys in ascending order of the counter
-	for _, key := range keys {
-		fmt.Printf("%v: %d\n", key, visited[key])
 	}
 }
 
