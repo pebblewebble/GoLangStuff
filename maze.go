@@ -111,11 +111,10 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 			//This part sometimes goes out of bounds
 			//I think the issue is that, for example the entire left side is stuck, and the only way to go to
 			//the goal is through the original spawn point which will cause the callStack to have 0?
-			//This method sometimes teleports idk why
-			if len(callStack) != 0 {
+			//This method sometimes teleports idk why - 6/2/2024
+			if len(callStack) != 1 {
 				callStack = callStack[:len(callStack)-1]
 			}
-
 			descAmount += 1
 		} else {
 			node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
