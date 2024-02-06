@@ -98,9 +98,13 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 	callStack := [][]int{}
 	descAmount := 2
 	for len(nonVisited) != 0 {
+
 		if node[0] == goal[0] && node[1] == goal[1] {
 			enemy.currentPosition[0] = callStack[1][0]
 			enemy.currentPosition[1] = callStack[1][1]
+			if enemy.currentPosition[0] == goal[0] && enemy.currentPosition[1] == goal[1] {
+				gameOver()
+			}
 			return
 		}
 
@@ -112,6 +116,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 			//I think the issue is that, for example the entire left side is stuck, and the only way to go to
 			//the goal is through the original spawn point which will cause the callStack to have 0?
 			//This method sometimes teleports idk why - 6/2/2024
+			//Nvm there is still some problems
 			if len(callStack) != 1 {
 				callStack = callStack[:len(callStack)-1]
 			}
@@ -364,7 +369,7 @@ func (maze *Maze) randomAlgo() [][]string {
 	return maze.gameMap
 }
 
-func (maze *Maze) movement(energyPos [][]int, enemy *Enemy) {
+func (maze *Maze) movement(energyPos [][]int, enemy []*Enemy) {
 	tty, err := tty.Open()
 	if err != nil {
 		log.Fatal(err)
@@ -411,7 +416,7 @@ func (maze *Maze) movement(energyPos [][]int, enemy *Enemy) {
 	}
 }
 
-func (maze *Maze) afterMovementLogic(energyPos [][]int, enemy *Enemy) {
+func (maze *Maze) afterMovementLogic(energyPos [][]int, enemy []*Enemy) {
 	//BTW this was made because if it is after the switch case, it will compute twice, meaning like the step
 	// will +2 instead.
 	maze.numSteps++
@@ -422,14 +427,22 @@ func (maze *Maze) afterMovementLogic(energyPos [][]int, enemy *Enemy) {
 	visited := [][]int{}
 	nonVisited := make([][2]int, 0)
 	graph := maze.makeGraph()
-	node := [2]int{enemy.currentPosition[0], enemy.currentPosition[1]}
-	goal := [2]int{maze.currentPosition[0], maze.currentPosition[1]}
-	maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = " "
-	//Updates enemy currentPosition here
-	enemy.dfs(node, goal, 0, visited, nonVisited, graph)
-	//Replace and draw
-	maze.gameMap[enemy.currentPosition[0]][enemy.currentPosition[1]] = color.HiRedString("C")
+	for _, value := range enemy {
+		node := [2]int{value.currentPosition[0], value.currentPosition[1]}
+		goal := [2]int{maze.currentPosition[0], maze.currentPosition[1]}
+		maze.gameMap[value.currentPosition[0]][value.currentPosition[1]] = " "
+		//Updates enemy currentPosition here
+		value.dfs(node, goal, 0, visited, nonVisited, graph)
+		//Replace and draw
+		maze.gameMap[value.currentPosition[0]][value.currentPosition[1]] = color.HiRedString("C")
+	}
+
 	maze.visualizeMaze()
+}
+
+func gameOver() {
+	fmt.Println("YOU LOST")
+
 }
 
 func (maze *Maze) generateStart() []int {
@@ -488,14 +501,14 @@ func main() {
 	// This program was designed to have and odd width and height
 	fmt.Println("Enter your desired width ")
 	newMaze := new(Maze)
-	// fmt.Scanln(&newMaze.width)
-	newMaze.width = 15
+	fmt.Scanln(&newMaze.width)
+	// newMaze.width = 15
 	fmt.Println("Enter your desired height ")
-	// fmt.Scanln(&newMaze.height)
-	newMaze.height = 15
+	fmt.Scanln(&newMaze.height)
+	// newMaze.height = 15
 	fmt.Println("Enter your desired energy orbs ")
 	numOrb := 0
-	// fmt.Scanln(&numOrb)
+	fmt.Scanln(&numOrb)
 	if newMaze.width%2 == 0 {
 		newMaze.width++
 	}
@@ -506,13 +519,16 @@ func main() {
 	newMaze.generateMaze()
 	newMaze.generateExit()
 	enemy1 := new(Enemy)
-	newMaze.enemy = append(newMaze.enemy, enemy1)
-	newMaze.spawn(enemy1)
+	enemy2 := new(Enemy)
+	newMaze.enemy = append(newMaze.enemy, enemy1, enemy2)
+	for i := range newMaze.enemy {
+		newMaze.spawn(newMaze.enemy[i])
+	}
 	energyPos := newMaze.generateEnergy(numOrb)
 	newMaze.visualizeMaze()
 	continueMovement := false
 	for !continueMovement {
-		newMaze.movement(energyPos, enemy1)
+		newMaze.movement(energyPos, newMaze.enemy)
 	}
 }
 
@@ -573,8 +589,8 @@ func (maze Maze) checkMovement(movementKey string) bool {
 
 func (maze *Maze) visualizeMaze() {
 	//Clear terminal
-	// fmt.Print("\033[H\033[2J")
-	// fmt.Printf("\033[%d;%dH", 0+1, 0+1)
+	fmt.Print("\033[H\033[2J")
+	fmt.Printf("\033[%d;%dH", 0+1, 0+1)
 	for i := 0; i < 1+maze.width*2; i++ {
 		fmt.Print("-")
 	}
