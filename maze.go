@@ -452,6 +452,14 @@ func checkEnergy(energyCords [][]int) {
 
 func main() {
 	// This program was designed to have and odd width and height
+	menu()
+}
+
+func menu() {
+	play()
+}
+
+func play() {
 	for {
 		fmt.Println("Enter your desired width ")
 		newMaze := new(Maze)
@@ -506,6 +514,7 @@ func main() {
 			}
 			if strings.ToLower(menuOption) == "y" {
 				newMaze.saveMaze()
+				return
 			}
 		}
 	}
