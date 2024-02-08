@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -483,7 +484,27 @@ func main() {
 				break
 			}
 		}
+		menuOption := ""
+		for strings.ToLower(menuOption) != "y" || strings.ToLower(menuOption) != "n" {
+			fmt.Println("Restart? (Y/N)")
+			fmt.Scanln(&menuOption)
+		}
+		if strings.ToLower(menuOption) == "y" {
+			continue
+		} else {
+			for strings.ToLower(menuOption) != "y" || strings.ToLower(menuOption) != "n" {
+				fmt.Println("Would you like to save? (Y/N)")
+				fmt.Scanln(&menuOption)
+			}
+			if strings.ToLower(menuOption) == "y" {
+				newMaze.saveMaze()
+			}
+		}
 	}
+}
+
+func (maze *Maze) saveMaze() {
+
 }
 
 func checkWall(gameMap [][]string, cellToCheck []int) int {
