@@ -456,7 +456,23 @@ func main() {
 }
 
 func menu() {
-	play()
+	menuOption := ""
+	for menuOption != "p" && menuOption != "l" && menuOption != "v" {
+		fmt.Println("***GO PROJECT***")
+		fmt.Println("  [P]lay")
+		fmt.Println("  [L]oad Save")
+		fmt.Println("  [V]iew Save")
+		fmt.Scanln(&menuOption)
+		menuOption = strings.ToLower(menuOption)
+	}
+	switch menuOption {
+	case "p":
+		play()
+	case "l":
+		fmt.Println("")
+	case "v":
+		fmt.Println("")
+	}
 }
 
 func play() {
