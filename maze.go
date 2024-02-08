@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ type Maze struct {
 	startingPosition []int
 	currentPosition  []int
 	gameMap          [][]string
+	initialGameMap   [][]string
 	exit             []int
 	algoSteps        int
 	enemy            []*Enemy
@@ -54,7 +56,11 @@ func (maze *Maze) initialize() [][]string {
 			}
 		}
 	}
-
+	maze.initialGameMap = make([][]string, len(maze.gameMap))
+	for i, row := range maze.gameMap {
+		maze.initialGameMap[i] = make([]string, len(row))
+		copy(maze.initialGameMap[i], row)
+	}
 	return maze.gameMap
 }
 
@@ -485,14 +491,14 @@ func main() {
 			}
 		}
 		menuOption := ""
-		for strings.ToLower(menuOption) != "y" || strings.ToLower(menuOption) != "n" {
+		for strings.ToLower(menuOption) != "y" && strings.ToLower(menuOption) != "n" {
 			fmt.Println("Restart? (Y/N)")
 			fmt.Scanln(&menuOption)
 		}
 		if strings.ToLower(menuOption) == "y" {
 			continue
 		} else {
-			for strings.ToLower(menuOption) != "y" || strings.ToLower(menuOption) != "n" {
+			for strings.ToLower(menuOption) != "y" && strings.ToLower(menuOption) != "n" {
 				fmt.Println("Would you like to save? (Y/N)")
 				fmt.Scanln(&menuOption)
 			}
@@ -504,7 +510,26 @@ func main() {
 }
 
 func (maze *Maze) saveMaze() {
-
+	f, err := os.Create("saveFile.txt")
+	if err != nil {
+		fmt.Println(err)
+		f.Close()
+		return
+	}
+	for i := range maze.initialGameMap {
+		fmt.Fprintln(f, maze.initialGameMap[i])
+		if err != nil {
+			fmt.Println(err)
+			f.Close()
+			return
+		}
+	}
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("File written.")
 }
 
 func checkWall(gameMap [][]string, cellToCheck []int) int {
