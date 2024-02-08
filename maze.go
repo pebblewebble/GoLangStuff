@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"math"
@@ -451,31 +452,74 @@ func checkEnergy(energyCords [][]int) {
 }
 
 func main() {
-	// This program was designed to have and odd width and height
 	menu()
 }
 
 func menu() {
-	menuOption := ""
-	for menuOption != "p" && menuOption != "l" && menuOption != "v" {
-		fmt.Println("***GO PROJECT***")
-		fmt.Println("  [P]lay")
-		fmt.Println("  [L]oad Save")
-		fmt.Println("  [V]iew Save")
-		fmt.Scanln(&menuOption)
-		menuOption = strings.ToLower(menuOption)
+	for {
+		menuOption := ""
+		for menuOption != "p" && menuOption != "l" && menuOption != "v" {
+			fmt.Println("***GO PROJECT***")
+			fmt.Println(" [P]lay")
+			fmt.Println(" [L]oad Save")
+			fmt.Println(" [V]iew Save")
+			fmt.Println(" [Q]uit")
+			fmt.Scanln(&menuOption)
+			menuOption = strings.ToLower(menuOption)
+		}
+		switch menuOption {
+		case "p":
+			play()
+		case "l":
+			fmt.Println("")
+		case "v":
+			viewSave()
+		case "q":
+			os.Exit(0)
+		}
 	}
-	switch menuOption {
-	case "p":
-		play()
-	case "l":
-		fmt.Println("")
-	case "v":
-		fmt.Println("")
+
+}
+
+func viewSave() {
+	file, err := os.Open("saveFile.txt")
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		lineSlice := strings.Split(line, "")
+		for _, i := range lineSlice {
+			switch i {
+			case "*":
+				i = color.HiBlueString("*")
+			case "C":
+				i = color.HiRedString("C")
+			case "O":
+				i = color.HiYellowString("O")
+			case "E":
+				i = color.HiGreenString("E")
+			}
+		}
+		fmt.Println(lineSlice)
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error:", err)
+		return
 	}
 }
 
+func loadSave() {
+
+}
+
 func play() {
+	// This program was designed to have and odd width and height
 	for {
 		fmt.Println("Enter your desired width ")
 		newMaze := new(Maze)
