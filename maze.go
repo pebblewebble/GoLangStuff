@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -55,11 +56,6 @@ func (maze *Maze) initialize() [][]string {
 				maze.gameMap[heightIndex][widthIndex] = " "
 			}
 		}
-	}
-	maze.initialGameMap = make([][]string, len(maze.gameMap))
-	for i, row := range maze.gameMap {
-		maze.initialGameMap[i] = make([]string, len(row))
-		copy(maze.initialGameMap[i], row)
 	}
 	return maze.gameMap
 }
@@ -482,6 +478,11 @@ func main() {
 		}
 		energyPos := newMaze.generateEnergy(numOrb)
 		newMaze.visualizeMaze()
+		newMaze.initialGameMap = make([][]string, len(newMaze.gameMap))
+		for i, row := range newMaze.gameMap {
+			newMaze.initialGameMap[i] = make([]string, len(row))
+			copy(newMaze.initialGameMap[i], row)
+		}
 		continueMovement := false
 		stateCheck := ""
 		for !continueMovement {
@@ -498,6 +499,7 @@ func main() {
 		if strings.ToLower(menuOption) == "y" {
 			continue
 		} else {
+			menuOption = ""
 			for strings.ToLower(menuOption) != "y" && strings.ToLower(menuOption) != "n" {
 				fmt.Println("Would you like to save? (Y/N)")
 				fmt.Scanln(&menuOption)
@@ -516,20 +518,27 @@ func (maze *Maze) saveMaze() {
 		f.Close()
 		return
 	}
-	for i := range maze.initialGameMap {
-		fmt.Fprintln(f, maze.initialGameMap[i])
-		if err != nil {
-			fmt.Println(err)
-			f.Close()
-			return
+	defer f.Close()
+
+	for _, row := range maze.initialGameMap {
+		for _, col := range row {
+			col = stripANSI(col)
+			_, err := fmt.Fprint(f, col)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		}
+		fmt.Fprint(f, "\n")
 	}
-	err = f.Close()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
 	fmt.Println("File written.")
+}
+
+func stripANSI(text string) string {
+	//Thanks ChatGPT didn't know the color for display purposes messed up the save
+	re := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	return re.ReplaceAllString(text, "")
 }
 
 func checkWall(gameMap [][]string, cellToCheck []int) int {
