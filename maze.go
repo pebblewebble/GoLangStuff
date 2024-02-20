@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -471,11 +472,11 @@ func menu() {
 		case "p":
 			play()
 		case "l":
-			fmt.Println("")
+			loadSave()
 		case "v":
 			viewSave()
 		case "q":
-			os.Exit(0)
+			os.Exit(3)
 		}
 	}
 
@@ -494,16 +495,16 @@ func viewSave() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		lineSlice := strings.Split(line, "")
-		for _, i := range lineSlice {
+		for j, i := range lineSlice {
 			switch i {
 			case "*":
-				i = color.HiBlueString("*")
+				lineSlice[j] = color.HiBlueString("*")
 			case "C":
-				i = color.HiRedString("C")
+				lineSlice[j] = color.HiRedString("C")
 			case "O":
-				i = color.HiYellowString("O")
+				lineSlice[j] = color.HiYellowString("O")
 			case "E":
-				i = color.HiGreenString("E")
+				lineSlice[j] = color.HiGreenString("E")
 			}
 		}
 		fmt.Println(lineSlice)
@@ -538,6 +539,7 @@ func play() {
 		newMaze.initialize()
 		newMaze.generateMaze()
 		newMaze.generateExit()
+		json.Marshal(newMaze)
 		enemy1 := new(Enemy)
 		enemy2 := new(Enemy)
 		newMaze.enemy = append(newMaze.enemy, enemy1, enemy2)
@@ -575,20 +577,43 @@ func play() {
 			if strings.ToLower(menuOption) == "y" {
 				newMaze.saveMaze()
 				return
+			} else {
+				return
 			}
 		}
 	}
 }
 
 func (maze *Maze) saveMaze() {
-	f, err := os.Create("saveFile.txt")
+	//read file content into memory first
+	input, err := os.ReadFile("saveFile.txt")
+	if err != nil {
+		fmt.Println(err)
+	}
+	contents := strings.Split(string(input), "\n")
+	f, err := os.OpenFile("saveFile.txt", os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Println(err)
 		f.Close()
 		return
 	}
 	defer f.Close()
-
+	saveNum := 0
+	for _, line := range contents {
+		if strings.Contains(line, "SAVE") {
+			saveNum++
+		}
+		_, err := fmt.Fprintln(f, line)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	saveNumString := fmt.Sprintf("SAVE_%d\n", saveNum)
+	_, err = fmt.Fprint(f, saveNumString )
+  if err != nil{
+    fmt.Println(err)
+    return
+  }
 	for _, row := range maze.initialGameMap {
 		for _, col := range row {
 			col = stripANSI(col)
@@ -672,7 +697,7 @@ func (maze *Maze) visualizeMaze() {
 	for i := 0; i < 1+maze.width*2; i++ {
 		fmt.Print("-")
 	}
-	fmt.Println("\n")
+	fmt.Println("")
 	fmt.Printf("Number of steps to create maze: %d\n", maze.algoSteps)
 	fmt.Printf("Number of steps you have taken: %d\n", maze.numSteps)
 	for i := range maze.gameMap {
