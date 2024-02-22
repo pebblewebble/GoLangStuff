@@ -482,11 +482,13 @@ func menu() {
 
 }
 
-func viewSave() {
-	file, err := os.Open("saveFile.txt")
+func viewSave() []string {
+  //Remember the save numbers to use for loadSave 
+  saves := []string{}
+  file, err := os.Open("saveFile.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
-		return
+		return []string{}
 	}
 	defer file.Close()
 
@@ -494,6 +496,9 @@ func viewSave() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
+    if strings.Contains(line,"SAVE"){
+      saves = append(saves, line)
+    }
 		lineSlice := strings.Split(line, "")
 		for j, i := range lineSlice {
 			switch i {
@@ -511,12 +516,27 @@ func viewSave() {
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error:", err)
-		return
+		return []string{} 
 	}
+  return saves
 }
 
 func loadSave() {
-
+  inputOption := ""
+  validOption := false
+  for !validOption{
+    saves := viewSave()
+    for index,value := range saves{
+      saves[index]=strings.Split(value,"_")[1]
+    }
+    fmt.Println("Please select the save to load by entering the save number. Eg:0")
+    fmt.Scanln(&inputOption)
+    for _,value := saves{
+      if inputOption==saves{
+        
+      }
+    }
+  }
 }
 
 func play() {
