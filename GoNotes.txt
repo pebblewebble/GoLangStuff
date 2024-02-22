@@ -1,2 +1,5 @@
 Go Exercise
 https://exercism.org/profiles/pebblewebble
+https://gin-gonic.com/
+TSInstall go
+^ to install syntax highlighting for language
