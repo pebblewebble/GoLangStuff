@@ -46,12 +46,12 @@ type Enemy struct {
 }
 
 func (maze *Maze) initialize() [][]string {
-	//Creating the matrix
+	// Creating the matrix
 	maze.gameMap = make([][]string, maze.height)
 	for heightIndex := 0; heightIndex < maze.height; heightIndex++ {
 		maze.gameMap[heightIndex] = make([]string, maze.width)
 		for widthIndex := 0; widthIndex < maze.width; widthIndex++ {
-			//Generate outer walls and cells
+			// Generate outer walls and cells
 			if heightIndex == 0 || heightIndex == maze.height-1 || widthIndex == 0 || widthIndex == maze.width-1 || heightIndex%2 == 0 || widthIndex%2 == 0 {
 				maze.gameMap[heightIndex][widthIndex] = color.HiBlueString("*")
 			} else {
@@ -63,8 +63,8 @@ func (maze *Maze) initialize() [][]string {
 }
 
 func (maze *Maze) generateMaze() [][]string {
-	//Generates a random odd X,Y starting position but instead of constantly randomly generating a random position each time,
-	//I could just minus 1 from the position that is not odd.
+	// Generates a random odd X,Y starting position but instead of constantly randomly generating a random position each time,
+	// I could just minus 1 from the position that is not odd.
 	maze.generateStart()
 	if maze.startingPosition[0]%2 == 0 {
 		maze.startingPosition[0]++
@@ -76,7 +76,7 @@ func (maze *Maze) generateMaze() [][]string {
 	maze.gameMap[maze.startingPosition[0]][maze.startingPosition[1]] = "X"
 
 	startTime := time.Now()
-	//Able to choose what type of algo in the future
+	// Able to choose what type of algo in the future
 	maze.gameMap = maze.randomAlgo()
 
 	duration := time.Since(startTime)
@@ -87,7 +87,6 @@ func (maze *Maze) generateMaze() [][]string {
 func (enemy *Enemy) greedyBestFirst(visited, nonVisited map[int][]int) {
 	// //Neighbours
 	// topCellHeuristic := getTotalDistance([]int{enemy.currentPosition[0] - 1, enemy.currentPosition[1]}, enemy.maze.currentPosition)
-
 }
 
 func getTotalDistance(enemyPos, playerPos []int) int {
@@ -114,18 +113,18 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 
 		if len(visited) != 0 && allNeighbourVisited && descAmount <= len(visited) {
 			node[0], node[1] = visited[len(visited)-descAmount][0], visited[len(visited)-descAmount][1]
-			//This part sometimes goes out of bounds
-			//I think the issue is that, for example the entire left side is stuck, and the only way to go to
-			//the goal is through the original spawn point which will cause the callStack to have 0?
-			//This method sometimes teleports idk why - 6/2/2024
-			//Nvm there is still some problems
+			// This part sometimes goes out of bounds
+			// I think the issue is that, for example the entire left side is stuck, and the only way to go to
+			// the goal is through the original spawn point which will cause the callStack to have 0?
+			// This method sometimes teleports idk why - 6/2/2024
+			// Nvm there is still some problems
 			if len(callStack) != 1 {
 				callStack = callStack[:len(callStack)-1]
 			}
 			descAmount += 1
 		} else {
 			node[0], node[1] = nonVisited[0][0], nonVisited[0][1]
-			//reset descAmount after escaping the deadend
+			// reset descAmount after escaping the deadend
 			descAmount = 1
 		}
 
@@ -137,16 +136,16 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 			}
 		}
 		if !existsCheck {
-			//Doesn't exist? add into visited
+			// Doesn't exist? add into visited
 			visited = append(visited, []int{node[0], node[1]})
 			callStack = append(callStack, []int{node[0], node[1]})
-			//Get the current node's neighbours
+			// Get the current node's neighbours
 			key := [2]int{node[0], node[1]}
 			currentPositionNeighbour := make([][]int, len(graph[key]))
 			copy(currentPositionNeighbour, graph[key])
-			//Remove first element
+			// Remove first element
 			nonVisited = nonVisited[1:]
-			//For each of the neighbour, add them back unless they've been visited b4
+			// For each of the neighbour, add them back unless they've been visited b4
 			for i := range currentPositionNeighbour {
 				temp := [2]int{}
 				copy(temp[:], currentPositionNeighbour[i])
@@ -177,7 +176,7 @@ func checkStuck(node [2]int, graph map[[2]int][][]int, visited [][]int) bool {
 		}
 		temp := [2]int{}
 		copy(temp[:], currentPositionNeighbour[i])
-		//Checks all of visited against all of current neighbour
+		// Checks all of visited against all of current neighbour
 		for _, x := range visited {
 			if x[0] == temp[0] && x[1] == temp[1] {
 				counter -= 1
@@ -218,27 +217,27 @@ func (maze *Maze) makeGraph() map[[2]int][][]int {
 }
 
 func (maze *Maze) randomAlgo() [][]string {
-	//Move and remove the wall between each other DONE
-	//Randomize whether to go vertical or horizontal DONE
-	//Empty cells is " ", so find number of " " and we can know the amount of empty cells and then while there is still empty cells
-	//we continue the movement?
-	//Need to improve movement so that if it rolls a direction but can't meet its inner condition, then redo another random direction again DONE
-	//Add condition to see if the direction being move has been visited b4. DONE
-	//A unvisited cell would be a cell with all the walls intact?
-	//If it has not moved, it will keep looping but I'm currently not sure how to let it determine that it is impossible to move or it's just really
-	//unlucky. just check neighbouring cells around current position to see if they are visited or not dumbass wtf
+	// Move and remove the wall between each other DONE
+	// Randomize whether to go vertical or horizontal DONE
+	// Empty cells is " ", so find number of " " and we can know the amount of empty cells and then while there is still empty cells
+	// we continue the movement?
+	// Need to improve movement so that if it rolls a direction but can't meet its inner condition, then redo another random direction again DONE
+	// Add condition to see if the direction being move has been visited b4. DONE
+	// A unvisited cell would be a cell with all the walls intact?
+	// If it has not moved, it will keep looping but I'm currently not sure how to let it determine that it is impossible to move or it's just really
+	// unlucky. just check neighbouring cells around current position to see if they are visited or not dumbass wtf
 	visitedCells := make([][]int, 0)
 	maze.currentPosition = make([]int, 2)
 
 	maze.currentPosition[0], maze.currentPosition[1] = maze.startingPosition[0], maze.startingPosition[1]
 	continueLoop := true
-	//REMEMBER TO CHANGE THIS FOR LOOP CONDITION
+	// REMEMBER TO CHANGE THIS FOR LOOP CONDITION
 	for continueLoop {
-		//TIME LAG FOR VISUAL PURPOSES
+		// TIME LAG FOR VISUAL PURPOSES
 		// time.Sleep(100 * time.Millisecond)
 		maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 		var moved bool = false
-		//Could get stuck forever if you're really that unlucky but it's suppose to be random tho idk
+		// Could get stuck forever if you're really that unlucky but it's suppose to be random tho idk
 		for !moved {
 			upCondition := maze.currentPosition[0]-2 < 0 || checkWall(maze.gameMap, []int{maze.currentPosition[0] - 2, maze.currentPosition[1]}) < 4
 			downCondition := maze.currentPosition[0]+2 > maze.height || checkWall(maze.gameMap, []int{maze.currentPosition[0] + 2, maze.currentPosition[1]}) < 4
@@ -250,7 +249,7 @@ func (maze *Maze) randomAlgo() [][]string {
 				// fmt.Printf("%d,%d", currentPosition[0], currentPosition[1])
 				maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]] = " "
 				// fmt.Printf("%v", visitedCells)
-				//NGL I'm not sure about the code below
+				// NGL I'm not sure about the code below
 				if len(visitedCells) >= 1 {
 					maze.currentPosition[0], maze.currentPosition[1] = visitedCells[len(visitedCells)-1][0], visitedCells[len(visitedCells)-1][1]
 				} else {
@@ -262,11 +261,11 @@ func (maze *Maze) randomAlgo() [][]string {
 			}
 
 			if rand.Intn(2) == 1 {
-				//Vertical
+				// Vertical
 				// fmt.Println("VERTICAL")
 				if rand.Intn(2) == 1 {
-					//Going Up
-					//If it does not go over the maze AND the cell has not been visited
+					// Going Up
+					// If it does not go over the maze AND the cell has not been visited
 					if maze.currentPosition[0]-2 > 0 && checkWall(maze.gameMap, []int{maze.currentPosition[0] - 2, maze.currentPosition[1]}) == 4 {
 						// fmt.Println("UP")
 						maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] = " "
@@ -274,7 +273,7 @@ func (maze *Maze) randomAlgo() [][]string {
 						moved = true
 					}
 				} else {
-					//Going Down
+					// Going Down
 					if maze.currentPosition[0]+2 < maze.height && checkWall(maze.gameMap, []int{maze.currentPosition[0] + 2, maze.currentPosition[1]}) == 4 {
 						// fmt.Println("DOWN")
 						maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] = " "
@@ -283,8 +282,8 @@ func (maze *Maze) randomAlgo() [][]string {
 					}
 				}
 			} else {
-				//Horizontal
-				//If it does not go over the maze
+				// Horizontal
+				// If it does not go over the maze
 				// fmt.Println("HORIZONTAL")
 				if rand.Intn(2) == 1 {
 					if maze.currentPosition[1]+2 < maze.width && checkWall(maze.gameMap, []int{maze.currentPosition[0], maze.currentPosition[1] + 2}) == 4 {
@@ -368,7 +367,7 @@ func (maze *Maze) movement(energyPos [][]int, enemy []*Enemy) string {
 }
 
 func (maze *Maze) afterMovementLogic(energyPos [][]int, enemy []*Enemy) string {
-	//BTW this was made because if it is after the switch case, it will compute twice, meaning like the step
+	// BTW this was made because if it is after the switch case, it will compute twice, meaning like the step
 	// will +2 instead.
 	maze.numSteps++
 	maze.checkExit()
@@ -383,21 +382,17 @@ func (maze *Maze) afterMovementLogic(energyPos [][]int, enemy []*Enemy) string {
 		node := [2]int{value.currentPosition[0], value.currentPosition[1]}
 		goal := [2]int{maze.currentPosition[0], maze.currentPosition[1]}
 		maze.gameMap[value.currentPosition[0]][value.currentPosition[1]] = " "
-		//Updates enemy currentPosition here
+		// Updates enemy currentPosition here
 		goalCheck = value.dfs(node, goal, 0, visited, nonVisited, graph)
 		if goalCheck == "LOSE" {
 			return "LOSE"
 		}
-		//Replace and draw
+		// Replace and draw
 		maze.gameMap[value.currentPosition[0]][value.currentPosition[1]] = color.HiRedString("C")
 	}
 
 	maze.visualizeMaze()
 	return "CONTINUE"
-}
-
-func gameOver() {
-	fmt.Println("YOU LOST")
 }
 
 func (maze *Maze) generateStart() []int {
@@ -449,7 +444,6 @@ func (maze *Maze) checkExit() {
 }
 
 func checkEnergy(energyCords [][]int) {
-
 }
 
 func main() {
@@ -479,13 +473,12 @@ func menu() {
 			os.Exit(3)
 		}
 	}
-
 }
 
 func viewSave() []string {
-  //Remember the save numbers to use for loadSave 
-  saves := []string{}
-  file, err := os.Open("saveFile.txt")
+	// Remember the save numbers to use for loadSave
+	saves := []string{}
+	file, err := os.Open("saveFile.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return []string{}
@@ -496,9 +489,9 @@ func viewSave() []string {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-    if strings.Contains(line,"SAVE"){
-      saves = append(saves, line)
-    }
+		if strings.Contains(line, "SAVE") {
+			saves = append(saves, line)
+		}
 		lineSlice := strings.Split(line, "")
 		for j, i := range lineSlice {
 			switch i {
@@ -516,27 +509,99 @@ func viewSave() []string {
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error:", err)
-		return []string{} 
+		return []string{}
 	}
-  return saves
+	return saves
 }
 
 func loadSave() {
-  inputOption := ""
-  validOption := false
-  for !validOption{
-    saves := viewSave()
-    for index,value := range saves{
-      saves[index]=strings.Split(value,"_")[1]
-    }
-    fmt.Println("Please select the save to load by entering the save number. Eg:0")
-    fmt.Scanln(&inputOption)
-    for _,value := saves{
-      if inputOption==saves{
-        
-      }
-    }
-  }
+	inputOption := ""
+	validOption := false
+	for !validOption {
+		saves := viewSave()
+		for index, value := range saves {
+			saves[index] = strings.Split(value, "_")[1]
+		}
+		fmt.Println("Please select the save to load by entering the save number. Eg:0")
+		fmt.Scanln(&inputOption)
+		for _, value := range saves {
+			if inputOption == value {
+				validOption = true
+			}
+		}
+	}
+	newMaze := new(Maze)
+	file, err := os.Open("saveFile.txt")
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	foundSave := false
+	row := -1
+	col := -1
+	energyPos := [][]int{}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			foundSave = false
+		}
+		if foundSave {
+			row++
+			temp := strings.Split(line, "")
+			for j, value := range temp {
+				col++
+				switch value {
+				case "*":
+					temp[j] = color.HiBlueString("*")
+				case "C":
+					temp[j] = color.HiRedString("C")
+					tempEnemy := new(Enemy)
+					tempEnemy.currentPosition = []int{row, col}
+					newMaze.enemy = append(newMaze.enemy, tempEnemy)
+				case "O":
+					temp[j] = color.HiYellowString("O")
+					newMaze.exit = []int{row, col}
+				case "E":
+					temp[j] = color.HiGreenString("E")
+					energyPos = append(energyPos, []int{row, col})
+				case "X":
+					newMaze.currentPosition = []int{row, col}
+				}
+
+			}
+      newMaze.width=col
+      newMaze.height=row
+			col = -1
+			newMaze.gameMap = append(newMaze.gameMap, temp)
+		}
+		if strings.Contains(line, "SAVE") && strings.Split(line, "_")[1] == inputOption {
+			foundSave = true
+		}
+	}
+	newMaze.visualizeMaze()
+	continueMovement := false
+	stateCheck := ""
+	for !continueMovement {
+		stateCheck = newMaze.movement(energyPos, newMaze.enemy)
+		if stateCheck == "LOSE" {
+			break
+		}
+	}
+}
+
+func initalizeGame() {
+	continueMovement := false
+	stateCheck := ""
+	for !continueMovement {
+		// stateCheck = newMaze.movement(energyPos, newMaze.enemy)
+		if stateCheck == "LOSE" {
+			break
+		}
+	}
 }
 
 func play() {
@@ -605,7 +670,7 @@ func play() {
 }
 
 func (maze *Maze) saveMaze() {
-	//read file content into memory first
+	// read file content into memory first
 	input, err := os.ReadFile("saveFile.txt")
 	if err != nil {
 		fmt.Println(err)
@@ -629,11 +694,11 @@ func (maze *Maze) saveMaze() {
 		}
 	}
 	saveNumString := fmt.Sprintf("SAVE_%d\n", saveNum)
-	_, err = fmt.Fprint(f, saveNumString )
-  if err != nil{
-    fmt.Println(err)
-    return
-  }
+	_, err = fmt.Fprint(f, saveNumString)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	for _, row := range maze.initialGameMap {
 		for _, col := range row {
 			col = stripANSI(col)
@@ -650,7 +715,7 @@ func (maze *Maze) saveMaze() {
 }
 
 func stripANSI(text string) string {
-	//Thanks ChatGPT didn't know the color for display purposes messed up the save
+	// Thanks ChatGPT didn't know the color for display purposes messed up the save
 	re := regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	return re.ReplaceAllString(text, "")
 }
@@ -660,24 +725,24 @@ func checkWall(gameMap [][]string, cellToCheck []int) int {
 	// fmt.Println("CHECKWALL")
 	// fmt.Printf("%d,%d\n", cellToCheck[0], cellToCheck[1])
 	// fmt.Print("\n")
-	//Thanks ChatGPT for the line below, i'm not sure my conditions werent working if the width and height is not the same :/
+	// Thanks ChatGPT for the line below, i'm not sure my conditions werent working if the width and height is not the same :/
 	if cellToCheck[0]+1 >= len(gameMap) || cellToCheck[1] >= len(gameMap[0]) {
 		return 0
 	}
 
-	//Check top wall
+	// Check top wall
 	if gameMap[cellToCheck[0]+1][cellToCheck[1]] == color.HiBlueString("*") {
 		totalWalls = totalWalls + 1
 	}
-	//Check right wall
+	// Check right wall
 	if gameMap[cellToCheck[0]][cellToCheck[1]+1] == color.HiBlueString("*") {
 		totalWalls = totalWalls + 1
 	}
-	//Check bottom wall
+	// Check bottom wall
 	if gameMap[cellToCheck[0]-1][cellToCheck[1]] == color.HiBlueString("*") {
 		totalWalls = totalWalls + 1
 	}
-	//Check left wall
+	// Check left wall
 	if gameMap[cellToCheck[0]][cellToCheck[1]-1] == color.HiBlueString("*") {
 		totalWalls = totalWalls + 1
 	}
@@ -690,7 +755,7 @@ func (maze Maze) checkMovement(movementKey string) bool {
 	// 	return true
 	// }
 	// return false
-	//ChatGPT optimised my method below, original on top
+	// ChatGPT optimised my method below, original on top
 	switch movementKey {
 	case "w":
 		// Check if moving up is valid
@@ -711,9 +776,9 @@ func (maze Maze) checkMovement(movementKey string) bool {
 }
 
 func (maze *Maze) visualizeMaze() {
-	//Clear terminal
-	fmt.Print("\033[H\033[2J")
-	fmt.Printf("\033[%d;%dH", 0+1, 0+1)
+	// Clear terminal
+	// fmt.Print("\033[H\033[2J")
+	// fmt.Printf("\033[%d;%dH", 0+1, 0+1)
 	for i := 0; i < 1+maze.width*2; i++ {
 		fmt.Print("-")
 	}
