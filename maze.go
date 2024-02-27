@@ -573,8 +573,8 @@ func loadSave() {
 				}
 
 			}
-      newMaze.width=col
-      newMaze.height=row
+			newMaze.width = col
+			newMaze.height = row
 			col = -1
 			newMaze.gameMap = append(newMaze.gameMap, temp)
 		}
@@ -759,16 +759,24 @@ func (maze Maze) checkMovement(movementKey string) bool {
 	switch movementKey {
 	case "w":
 		// Check if moving up is valid
-		return maze.currentPosition[0]-1 > 0 && maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] != color.HiBlueString("*")
+		return maze.currentPosition[0]-1 > 0 &&
+			maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] != color.HiBlueString("*") &&
+			maze.gameMap[maze.currentPosition[0]-1][maze.currentPosition[1]] != color.HiRedString("C")
 	case "a":
 		// Check if moving left is valid
-		return maze.currentPosition[1]-1 > 0 && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] != color.HiBlueString("*")
+		return maze.currentPosition[1]-1 > 0 &&
+			maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] != color.HiBlueString("*") &&
+			maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]-1] != color.HiRedString("C")
 	case "s":
 		// Check if moving down is valid
-		return maze.currentPosition[0]+1 < maze.height && maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] != color.HiBlueString("*")
+		return maze.currentPosition[0]+1 < maze.height &&
+			maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] != color.HiBlueString("*") &&
+			maze.gameMap[maze.currentPosition[0]+1][maze.currentPosition[1]] != color.HiRedString("C")
 	case "d":
 		// Check if moving right is valid
-		return maze.currentPosition[1]+1 < maze.width && maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] != color.HiBlueString("*")
+		return maze.currentPosition[1]+1 < maze.width &&
+			maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] != color.HiBlueString("*") &&
+			maze.gameMap[maze.currentPosition[0]][maze.currentPosition[1]+1] != color.HiRedString("C")
 	default:
 		// Invalid movement key
 		return false
