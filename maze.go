@@ -100,17 +100,19 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 	callStack := [][]int{}
 	descAmount := 2
 	for len(nonVisited) != 0 {
+    fmt.Println(node)
 		if node[0] == goal[0] && node[1] == goal[1] {
 			enemy.currentPosition[0] = callStack[1][0]
 			enemy.currentPosition[1] = callStack[1][1]
+      if callStack[0][0]==goal[0] && callStack[0][1]==goal[1]{
+        return "LOSE"
+      }
 			if enemy.currentPosition[0] == goal[0] && enemy.currentPosition[1] == goal[1] {
 				return "LOSE"
 			}
 			return ""
 		}
-
 		allNeighbourVisited := checkStuck(node, graph, visited)
-
 		if len(visited) != 0 && allNeighbourVisited && descAmount <= len(visited) {
 			node[0], node[1] = visited[len(visited)-descAmount][0], visited[len(visited)-descAmount][1]
 			// This part sometimes goes out of bounds
@@ -162,7 +164,7 @@ func (enemy *Enemy) dfs(node [2]int, goal [2]int, counter int, visited [][]int, 
 			}
 		}
 	}
-	return ""
+	return "LOSE"
 }
 
 func checkStuck(node [2]int, graph map[[2]int][][]int, visited [][]int) bool {
